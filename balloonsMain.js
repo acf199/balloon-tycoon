@@ -340,68 +340,93 @@ function oilChange() {
     }
 }
 
-document.getElementById("exportSave").addEventListener("click", () => {
-    const saveData = localStorage.getItem("balloonTycoonSave");
+document.getElementById("exportSave").addEventListener("click", exportSave);
 
-    if (!saveData) {
-        alert("No save data found.");
+function exportSave() {
+    const saveData = {
+        balloonInventory,
+        heliumSupply,
+        availableFunds,
+        earningsTotal,
+        inflateRate,
+        deliveryCooldown,
+        workerHired: hireWorkerButton.disabled,
+        superInflater: superBalloonInflater.disabled,
+        electricInflater: electricBalloonInflater.disabled,
+        fiveButtonVisible: !superButton.hasAttribute("style"),
+        workerIntervalActive: workerStatus !== null,
+        oilChangePurchased: oilChangeButton.disabled
+    };
+
+    const blob = new Blob([JSON.stringify(saveData)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "balloon_tycoon_save.json"; // The name of the file that will be downloaded
+    a.click(); // Trigger the download
+}
+
+
+document.getElementById("importSave").addEventListener("click", importSave);
+
+function importSave() {
+    const fileInput = document.getElementById("importFile");
+    const file = fileInput.files[0]; // Get the file that the user uploaded
+
+    if (!file) {
+        alert("Please select a save file to import.");
         return;
     }
 
-    const blob = new Blob([saveData], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "balloon_tycoon_save.json";
-    a.click();
-
-    URL.revokeObjectURL(url);
-});
-
-document.getElementById("importSave").addEventListener("click", () => {
-    document.getElementById("importSaveFile").click();
-});
-
-document.getElementById("importSaveFile").addEventListener("change", (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
     const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const data = JSON.parse(e.target.result);
 
-            // OPTIONAL: validate structure here
-            if (typeof data !== "object" || data === null || !("balloonInventory" in data)) {
-                throw new Error("Invalid save file.");
+    reader.onload = function(event) {
+        try {
+            const data = JSON.parse(event.target.result); // Parse the JSON data
+
+            // Load the saved game state
+            balloonInventory = data.balloonInventory;
+            heliumSupply = data.heliumSupply;
+            availableFunds = data.availableFunds;
+            earningsTotal = data.earningsTotal;
+            inflateRate = data.inflateRate;
+            deliveryCooldown = data.deliveryCooldown;
+
+            // Update the UI with the loaded data
+            countDisplay.textContent = balloonInventory;
+            heliumDisplay.textContent = heliumSupply;
+            fundsDisplay.textContent = availableFunds;
+
+            // Restore other game states like buttons, etc.
+            if (data.workerHired) {
+                hireWorkerButton.disabled = true;
+                balloonWorkerLoop(); // Re-hire the worker if they were hired
             }
 
-            localStorage.setItem("balloonTycoonSave", JSON.stringify(data));
-            alert("Save file imported successfully! Reloading...");
-            location.reload();
-        } catch (err) {
-            alert("Failed to import save file. Make sure it's a valid Balloon Tycoon file.");
+            if (data.superInflater) {
+                superBalloonInflater.disabled = true;
+            }
+
+            if (data.electricInflater) {
+                electricBalloonInflater.disabled = true;
+            }
+
+            if (data.fiveButtonVisible) {
+                superButton.removeAttribute("style"); // Show the five balloons button
+            }
+
+            if (data.oilChangePurchased) {
+                oilChangeButton.disabled = true;
+            }
+
+            alert("Save imported successfully!");
+        } catch (error) {
+            alert("Failed to import save. Please ensure the file is valid.");
         }
     };
-    reader.readAsText(file);
-});
 
-document.getElementById("importFileInput").addEventListener("change", (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+    reader.readAsText(file); // Read the file as text
+}
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const data = JSON.parse(e.target.result);
-            // Load data to game
-        } catch {
-            logMessage("Import failed: Invalid file format.");
-        }
-    };
-    reader.readAsText(file);
-});
 
 
 
