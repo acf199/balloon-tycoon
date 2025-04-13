@@ -479,6 +479,7 @@ document.getElementById("resetGame").addEventListener("click", () => {
 
 
 function saveGame() {
+    console.log("Saving game...");  // Check if this gets logged
     const saveData = {
         balloonInventory,
         heliumSupply,
