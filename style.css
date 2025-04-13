@@ -52,3 +52,9 @@
     flex-direction: column;
     gap: 5px;
 }
+
+.eventBanner {
+    background-color: #0f0;
+    opacity: 50%;
+    color: black;
+}

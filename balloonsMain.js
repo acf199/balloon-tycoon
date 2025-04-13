@@ -11,6 +11,28 @@ let inflateRate = 1
 
 const MAX_LOGS = 5; // Optional: limit number of messages
 
+function logMessage(text) {
+    const message = document.createElement("div");
+    message.classList.add("logMessage");
+    message.textContent = text;
+
+    if (terminalPrinter.children.length >= MAX_LOGS) {
+        terminalPrinter.firstChild.remove();
+    }
+
+    terminalPrinter.appendChild(message);
+
+    setTimeout(() => {
+        message.style.opacity = "0";
+    }, 300);
+
+    setTimeout(() => {
+        message.remove();
+    }, 2100);
+}
+
+
+
 function blowBalloon() {
 
     const message = document.createElement("div");
@@ -25,33 +47,16 @@ function blowBalloon() {
             heliumSupply -= inflateRate;
             heliumDisplay.innerHTML = heliumSupply;
             countDisplay.innerHTML = balloonInventory;
-            message.textContent = "One (1) balloon added to inventory.";
+            logMessage("One (1) balloon added to inventory.");
         } else {
             heliumSupply -= inflateRate;
             heliumDisplay.innerHTML = heliumSupply;
-            message.textContent = "Helium Leak! No balloon yielded.";
+            logMessage("Helium Leak! No balloon yielded.");
         }
     }
     else {
-        message.textContent = "Not enough helium gas. Purchase more to continue!"
+        logMessage("Not enough helium gas. Purchase more to continue!");
     }
-
-    // Trim log if too many messages
-    if (terminalPrinter.children.length >= MAX_LOGS) {
-        terminalPrinter.firstChild.remove();
-    }
-
-    terminalPrinter.appendChild(message);
-
-    // Trigger fade after short delay
-    setTimeout(() => {
-        message.style.opacity = "0";
-    }, 300);
-
-    // Remove message after it fades out
-    setTimeout(() => {
-        message.remove();
-    }, 2100);
 };
 
 balloonButton5 = document.getElementById("fiveControl");
@@ -68,33 +73,18 @@ function blowFiveBalloons() {
         heliumSupply -= inflateRate * 5;
         heliumDisplay.innerHTML = heliumSupply;
         countDisplay.innerHTML = balloonInventory;
-        message.textContent = "Five (5) balloons added to inventory.";
+        logMessage("Five (5) balloons added to inventory.");
 
     }
     else {
-        message.textContent = "Not enough helium gas. Purchase more to continue!"
+        logMessage("Not enough helium gas. Purchase more to continue!");
     }
 
-    // Trim log if too many messages
-    if (terminalPrinter.children.length >= MAX_LOGS) {
-        terminalPrinter.firstChild.remove();
-    }
-
-    terminalPrinter.appendChild(message);
-
-    // Trigger fade after short delay
-    setTimeout(() => {
-        message.style.opacity = "0";
-    }, 300);
-
-    // Remove message after it fades out
-    setTimeout(() => {
-        message.remove();
-    }, 2100);
 };
 
 
 let availableFunds = 100
+let earningsTotal = 100
 
 
 heliumButton = document.getElementById("buyHelium");
@@ -111,27 +101,12 @@ function buyHelium() {
         heliumSupply += 50;
         heliumDisplay.innerHTML = heliumSupply
         fundsDisplay.innerHTML = availableFunds
-        message.textContent = "Success! Purchased 50 cu. ft. of Helium Gas for $25"
+        logMessage("Success! Purchased 50 cu. ft. of Helium Gas for $25");
     }
     else {
-        message.textContent = "Insufficient Funds."
+        logMessage("Insufficient Funds.");
     }
 
-    if (terminalPrinter.children.length >= MAX_LOGS) {
-        terminalPrinter.firstChild.remove();
-    }
-
-    terminalPrinter.appendChild(message);
-
-    // Trigger fade after short delay
-    setTimeout(() => {
-        message.style.opacity = "0";
-    }, 300);
-
-    // Remove message after it fades out
-    setTimeout(() => {
-        message.remove();
-    }, 2100);
 }
 
 
@@ -154,6 +129,7 @@ function disableButtonWithCountdown(button, seconds) {
     }, 1000);
 }
 
+let deliveryCooldown = 10
 
 
 const sellButton = document.getElementById("sellBalloons50");
@@ -166,44 +142,39 @@ function sellBalloons50() {
 
     if (balloonInventory >= 50) {
         availableFunds += 75;
+        earningsTotal += 75;
         balloonInventory -= 50;
         fundsDisplay.innerHTML = availableFunds;
         countDisplay.innerHTML = balloonInventory;
 
-        message.textContent = "Sold 50 balloons from inventory for $75."
+        logMessage(`Sold 50 balloons from inventory for $75. Delivery service will return in ${deliveryCooldown} seconds.`);
 
-        disableButtonWithCountdown(sellButton, 10);
+        disableButtonWithCountdown(sellButton, deliveryCooldown);
+
+        if (earningsTotal >= 1000) {
+            sellButton3.removeAttribute("style");
+            logMessage("$1000 total earnings reached. New bulk delivery unlocked.");
+        }
 
 
     }
     else {
-        message.textContent = "Insufficent inventory to fulfill order. Delivery service will return in 30 seconds"
+        logMessage(`Insufficent inventory to fulfill order. Delivery service will return in ${deliveryCooldown * 2} seconds`);
 
-        disableButtonWithCountdown(sellButton, 15);
+        disableButtonWithCountdown(sellButton, deliveryCooldown * 2);
 
     }
-
-    if (terminalPrinter.children.length >= MAX_LOGS) {
-        terminalPrinter.firstChild.remove();
-    }
-
-    terminalPrinter.appendChild(message);
-
-    // Trigger fade after short delay
-    setTimeout(() => {
-        message.style.opacity = "0";
-    }, 300);
-
-    // Remove message after it fades out
-    setTimeout(() => {
-        message.remove();
-    }, 2100);
 };
 
 
 
 const sellButton2 = document.getElementById("sellBalloons200");
 sellButton2.addEventListener("click", sellBalloons200);
+
+
+
+const sellButton3 = document.getElementById("sellBalloons1000");
+sellButton3.addEventListener("click", sellBalloons1000);
 
 function sellBalloons200() {
 
@@ -212,38 +183,55 @@ function sellBalloons200() {
 
     if (balloonInventory >= 200) {
         availableFunds += 300;
+        earningsTotal += 300;
         balloonInventory -= 200;
         fundsDisplay.innerHTML = availableFunds;
         countDisplay.innerHTML = balloonInventory;
 
-        message.textContent = "Sold 200 balloons in bulk from inventory for $300. Delivery truck will return in 20 seconds"
+        logMessage(`Sold 200 balloons in bulk from inventory for $300. Delivery truck will return in ${deliveryCooldown * 2} seconds`);
 
-        disableButtonWithCountdown(sellButton2, 20);
+        disableButtonWithCountdown(sellButton2, deliveryCooldown * 2);
+
+        if (earningsTotal >= 1000) {
+            sellButton3.removeAttribute("style");
+            logMessage("$1000 total earnings reached. New bulk delivery unlocked.");
+        }
 
 
     }
     else {
-        message.textContent = "Insufficent inventory to fulfill order. Delivery service will return in 40 seconds."
+        logMessage(`Insufficent inventory to fulfill order. Delivery service will return in ${deliveryCooldown * 3} seconds.`);
 
-        disableButtonWithCountdown(sellButton2, 40);
+        disableButtonWithCountdown(sellButton2, deliveryCooldown * 3);
 
     }
+};
 
-    if (terminalPrinter.children.length >= MAX_LOGS) {
-        terminalPrinter.firstChild.remove();
+
+function sellBalloons1000() {
+
+    const message = document.createElement("div");
+    message.classList.add("logMessage");
+
+    if (balloonInventory >= 1000) {
+        availableFunds += 1800;
+        earningsTotal += 1800;
+        balloonInventory -= 1000;
+        fundsDisplay.innerHTML = availableFunds;
+        countDisplay.innerHTML = balloonInventory;
+
+        logMessage(`Sold 1000 balloons in bulk from inventory for $1800. Delivery truck will return in ${deliveryCooldown * 3} seconds`);
+
+        disableButtonWithCountdown(sellButton3, deliveryCooldown * 3);
+
+
     }
+    else {
+        logMessage(`Insufficent inventory to fulfill order. Delivery service will return in ${deliveryCooldown * 4} seconds.`);
 
-    terminalPrinter.appendChild(message);
+        disableButtonWithCountdown(sellButton3, deliveryCooldown * 4);
 
-    // Trigger fade after short delay
-    setTimeout(() => {
-        message.style.opacity = "0";
-    }, 300);
-
-    // Remove message after it fades out
-    setTimeout(() => {
-        message.remove();
-    }, 2100);
+    }
 };
 
 
@@ -264,33 +252,15 @@ function purchaseInflater() {
 
         electricBalloonInflater.disabled = true;
 
-        message.textContent = "Electric Inflater purchased for $150. Balloons now only take 0.5 cu. ft. of Helium Gas to inflate"
+        logMessage("Electric Inflater purchased for $150. Balloons now only take 0.5 cu. ft. of Helium Gas to inflate");
     }
     else {
-        message.textContent = "Insufficient Funds."
+        logMessage("Insufficient Funds.");
     }
-
-    if (terminalPrinter.children.length >= MAX_LOGS) {
-        terminalPrinter.firstChild.remove();
-    }
-
-    terminalPrinter.appendChild(message);
-
-    // Trigger fade after short delay
-    setTimeout(() => {
-        message.style.opacity = "0";
-    }, 300);
-
-    // Remove message after it fades out
-    setTimeout(() => {
-        message.remove();
-    }, 2100);
-
-
 }
 
 
-
+const hireWorkerButton = document.getElementById("buyBalloonWorker");
 
 const superBalloonInflater = document.getElementById("buySuperInflater");
 superBalloonInflater.addEventListener("click", purchaseSuperInflater);
@@ -310,27 +280,61 @@ function purchaseSuperInflater() {
 
         superBalloonInflater.disabled = true;
 
-        message.textContent = "Five-Hose Balloon Super Inflater purchased for $1000. Balloons can now be inflated five (5) at a time."
+        hireWorkerButton.removeAttribute("style");
+
+        logMessage("Five-Hose Balloon Super Inflater purchased for $1000. Balloons can now be inflated five (5) at a time.");
     }
     else {
-        message.textContent = "Insufficient Funds."
+        logMessage("Insufficient Funds.");
+    }
+}
+
+let staffRate = 1000;
+let workerStatus = null
+
+hireWorkerButton.addEventListener("click", hireWorker);
+
+function balloonWorkerLoop() {
+    if (workerStatus !== null) return;
+    setInterval(() => {
+        blowBalloon();
+    }, staffRate);
+}
+
+function hireWorker() {
+
+    const message = document.createElement("div");
+    message.classList.add("logMessage");
+
+    if (availableFunds >= 2000) {
+        availableFunds -= 2000;
+        balloonWorkerLoop();
+        hireWorkerButton.disabled = true;
+        oilChangeButton.removeAttribute("style");
+        logMessage("Worker hired. They will now help inflate balloons automatically.");
+        if (terminalPrinter.children.length >= MAX_LOGS) {
+            terminalPrinter.firstChild.remove();
+        }
     }
 
-    if (terminalPrinter.children.length >= MAX_LOGS) {
-        terminalPrinter.firstChild.remove();
+    else {
+        logMessage("Insufficient Funds.");
     }
-
-    terminalPrinter.appendChild(message);
-
-    // Trigger fade after short delay
-    setTimeout(() => {
-        message.style.opacity = "0";
-    }, 300);
-
-    // Remove message after it fades out
-    setTimeout(() => {
-        message.remove();
-    }, 2100);
+}
 
 
+const oilChangeButton = document.getElementById("oilChange");
+oilChangeButton.addEventListener("click", oilChange);
+
+function oilChange() {
+    if (availableFunds >= 3000) {
+        availableFunds -= 3000
+        fundsDisplay.innerHTML = availableFunds
+        oilChangeButton.disabled = true;
+        deliveryCooldown /= 2;
+        logMessage("Delivery cooldowns cut in half!");
+    }
+    else {
+        logMessage("Insufficient Funds.")
+    }
 }
