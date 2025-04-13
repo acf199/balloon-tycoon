@@ -387,6 +387,22 @@ document.getElementById("importSaveFile").addEventListener("change", (event) => 
     reader.readAsText(file);
 });
 
+document.getElementById("importFileInput").addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            // Load data to game
+        } catch {
+            logMessage("Import failed: Invalid file format.");
+        }
+    };
+    reader.readAsText(file);
+});
+
 
 
 document.getElementById("resetGame").addEventListener("click", () => {
