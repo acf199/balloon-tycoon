@@ -296,10 +296,11 @@ hireWorkerButton.addEventListener("click", hireWorker);
 
 function balloonWorkerLoop() {
     if (workerStatus !== null) return;
-    setInterval(() => {
+    workerStatus = setInterval(() => {
         blowBalloon();
     }, staffRate);
 }
+
 
 function hireWorker() {
 
@@ -338,3 +339,158 @@ function oilChange() {
         logMessage("Insufficient Funds.")
     }
 }
+
+document.getElementById("exportSave").addEventListener("click", () => {
+    const saveData = localStorage.getItem("balloonTycoonSave");
+
+    if (!saveData) {
+        alert("No save data found.");
+        return;
+    }
+
+    const blob = new Blob([saveData], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "balloon_tycoon_save.json";
+    a.click();
+
+    URL.revokeObjectURL(url);
+});
+
+document.getElementById("importSave").addEventListener("click", () => {
+    document.getElementById("importSaveFile").click();
+});
+
+document.getElementById("importSaveFile").addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+
+            // OPTIONAL: validate structure here
+            if (typeof data !== "object" || data === null || !("balloonInventory" in data)) {
+                throw new Error("Invalid save file.");
+            }
+
+            localStorage.setItem("balloonTycoonSave", JSON.stringify(data));
+            alert("Save file imported successfully! Reloading...");
+            location.reload();
+        } catch (err) {
+            alert("Failed to import save file. Make sure it's a valid Balloon Tycoon file.");
+        }
+    };
+    reader.readAsText(file);
+});
+
+
+
+document.getElementById("resetGame").addEventListener("click", () => {
+    if (confirm("Are you sure you want to reset your progress?")) {
+        // Wipe localStorage
+        localStorage.removeItem("balloonTycoonSave");
+
+        // Reset variables to avoid flicker
+        balloonInventory = 0;
+        heliumSupply = 100;
+        availableFunds = 100;
+        earningsTotal = 100;
+        inflateRate = 1;
+        deliveryCooldown = 10;
+
+        // Clear worker if active
+        if (workerStatus) {
+            clearInterval(workerStatus);
+            workerStatus = null;
+        }
+
+        // Clear the DOM displays too (optional but helps avoid UI flicker)
+        countDisplay.textContent = balloonInventory;
+        heliumDisplay.textContent = heliumSupply;
+        fundsDisplay.textContent = availableFunds;
+
+        // Delay the reload to let everything settle
+        setTimeout(() => {
+            location.reload();
+        }, 200);
+    }
+});
+
+
+
+
+function saveGame() {
+    const saveData = {
+        balloonInventory,
+        heliumSupply,
+        availableFunds,
+        earningsTotal,
+        inflateRate,
+        deliveryCooldown,
+        workerHired: hireWorkerButton.disabled,
+        superInflater: superBalloonInflater.disabled,
+        electricInflater: electricBalloonInflater.disabled,
+        fiveButtonVisible: !superButton.hasAttribute("style"),
+        workerIntervalActive: workerStatus !== null,
+        oilChangePurchased: oilChangeButton.disabled
+    };
+
+    localStorage.setItem("balloonTycoonSave", JSON.stringify(saveData));
+}
+
+function loadGame() {
+    const saved = localStorage.getItem("balloonTycoonSave");
+    if (!saved) {
+        // Set default visibility state
+        hireWorkerButton.setAttribute("style", "display:none;");
+        superButton.setAttribute("style", "display:none;");
+        oilChangeButton.setAttribute("style", "display:none;");
+        return;
+    }
+
+    const data = JSON.parse(saved);
+
+    balloonInventory = data.balloonInventory;
+    heliumSupply = data.heliumSupply;
+    availableFunds = data.availableFunds;
+    earningsTotal = data.earningsTotal;
+    inflateRate = data.inflateRate;
+    deliveryCooldown = data.deliveryCooldown;
+
+    countDisplay.textContent = balloonInventory;
+    heliumDisplay.textContent = heliumSupply;
+    fundsDisplay.textContent = availableFunds;
+
+    if (data.workerHired) {
+        hireWorkerButton.disabled = true;
+        balloonWorkerLoop();
+    } else {
+        hireWorkerButton.setAttribute("style", "display:none;");
+    }
+
+    if (data.superInflater) {
+        superBalloonInflater.disabled = true;
+    }
+
+    if (data.electricInflater) {
+        electricBalloonInflater.disabled = true;
+    }
+
+    if (data.fiveButtonVisible) {
+        superButton.removeAttribute("style");
+    }
+
+    if (data.oilChangePurchased) {
+        oilChangeButton.disabled = true;
+    } else {
+        oilChangeButton.setAttribute("style", "display:none;");
+    }
+}
+
+
+window.addEventListener("beforeunload", saveGame);
+window.addEventListener("load", loadGame);
