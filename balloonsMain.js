@@ -1,17 +1,3 @@
-try {
-    localStorage.setItem('test', '1');
-    localStorage.removeItem('test');
-    console.log('localStorage is working');
-} catch (e) {
-    console.error('localStorage is not available', e);
-}
-
-
-// Save game manually
-document.getElementById("saveButton").addEventListener("click", saveGame);
-
-
-
 balloonButton = document.getElementById("mainControl");
 balloonButton.addEventListener("click", blowBalloon);
 
