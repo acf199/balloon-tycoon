@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Balloon Stand</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='style.css'>
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png">
+    <link rel="manifest" href="/favicons/site.webmanifest">
+</head>
+<body>
+
+    <div id="logContainer">
+
+        -bash-3.2$ balloon-stand</br>
+        open for business...<span id="cursor" class="pulsate">|</span>
+        <div id="logMsg"></div>
+    </div>
+
+
+<div class="gameContainer">
+
+    <div class="yourStand">
+
+        <h1>Balloon Stand &#127880;</h1>
+        <button id="mainControl" type="button">Blow a balloon!</button>
+        <button style = "display:none;" id="fiveControl" type="button">Blow 5 balloons!</button>
+        <h2 id="inventoryLabel">Balloons available in inventory:</h2>
+        <p id="inventoryQuantity">0</p>
+
+        <h2 id="heliumLabel">Helium Supply (in cu. ft.):</h2>
+        <p id="heliumSupply">100</p>
+
+        <h2 id="fundsLabel">Available Funds</h2>
+        <p id="funds">100</p>
+
+    </div>
+
+    <div class="supplyStore">
+        <h1>Hardware Store 	&#127978;</h1>
+        <div class="upgradeSelection">
+            <button id="buyHelium" type="button">Purchase Helium Gas ($25)</button>
+            <button id="buyElectricInflater" type="button">Purchase Powered Balloon Inflater ($150)</button>
+            <button id="buySuperInflater" type="button">Purchase Five-Hose Balloon Super Inflater ($1000)</button>
+        </div>
+    </div>
+
+    <div class="shippingDock">
+        <h1>Fulfill Orders 	&#128666;</h1>
+        <div class="saleTypes">
+            <button id="sellBalloons50" type="button">Fulfill Balloon Order (50 count)</button>
+            <button id="sellBalloons200" type="button">Fulfill Balloon Order (200 count)</button>
+        </div>
+    </div>
+
+</div>
+
+    <script src='balloonsMain.js'></script>
+</body>
+</html>
