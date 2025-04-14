@@ -68,13 +68,11 @@
     justify-content: space-between;
 }
 
-#profitBoostBanner {
+#eventBanner {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    background-color: #28a745;
-    color: white;
     text-align: center;
     padding: 15px;
     font-size: 18px;
@@ -83,6 +81,16 @@
     display: none; /* Hidden by default */
 }
 
-#profitBoostBanner.active {
+#eventBanner.positive {
+    background-color: #28a745;
+    color: white;
+}
+
+#eventBanner.negative {
+    background-color: #c73636;
+    color: rgb(0, 0, 0);
+}
+
+#eventBanner.active {
     display: block; /* Show when active */
 }

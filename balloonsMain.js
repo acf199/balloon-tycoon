@@ -141,16 +141,15 @@ let profitBoostCountdown = null;
 
 function activateProfitBoost() {
     if (!profitBoost) {
-        const randomChance = Math.random();
-        if (randomChance < 0.2) {
             profitBoost = true;
             let timeLeft = profitBoostDuration;
 
-            const banner = document.getElementById('profitBoostBanner');
-            const bannerMsg = document.getElementById('profitBoostMessage');
+            const banner = document.getElementById('eventBanner');
+            const bannerMsg = document.getElementById('eventMessage');
 
             logMessage(`💸 Profit Boost Activated! Earnings are doubled for ${profitBoostDuration} seconds.`);
             banner.classList.add('active');
+            banner.classList.add("positive");
             bannerMsg.textContent = `💸 Profit Boost Active! ${timeLeft} seconds remaining...`;
 
             // Countdown interval
@@ -167,10 +166,49 @@ function activateProfitBoost() {
                 profitBoost = false;
                 logMessage("Profit Boost has ended.");
                 banner.classList.remove('active');
+                banner.classList.remove("positive");
                 clearInterval(profitBoostCountdown);
             }, profitBoostDuration * 1000);
         }
-    }
+}
+
+
+let marketDownturn = false;
+const marketDownturnDuration = 10;
+let marketDownturnTimer = null;
+let marketDownturnCountdown = null;
+
+function activateMarketDownturn() {
+    if (!marketDownturn) {
+            marketDownturn = true;
+            let timeLeft = marketDownturnDuration;
+
+            const banner = document.getElementById('eventBanner');
+            const bannerMsg = document.getElementById('eventMessage');
+
+            logMessage(`💸 Market Downturn! Earnings are halved for ${marketDownturnDuration} seconds.`);
+            banner.classList.add('active');
+            banner.classList.add("negative");
+            bannerMsg.textContent = `💸 Market Downturn! ${timeLeft} seconds remaining...`;
+
+            // Countdown interval
+            marketDownturnCountdown = setInterval(() => {
+                timeLeft--;
+                bannerMsg.textContent = `💸 Market Downturn! ${timeLeft} seconds remaining...`;
+                if (timeLeft <= 0) {
+                    clearInterval(marketDownturnCountdown);
+                }
+            }, 1000);
+
+            // End profit boost after the duration
+            marketDownturnTimer = setTimeout(() => {
+                marketDownturn = false;
+                logMessage("Market Downturn has ended.");
+                banner.classList.remove('active');
+                banner.classList.remove("negative");
+                clearInterval(marketDownturnCountdown);
+            }, marketDownturnDuration * 1000);
+        }
 }
 
 
@@ -190,6 +228,11 @@ function sellBalloons50() {
             availableFunds += profitMatrix.sell50 * 2;
             earningsTotal += profitMatrix.sell50 * 2;
             logMessage(`Sold 50 balloons from inventory for $${profitMatrix.sell50 * 2}. Delivery service will return in ${deliveryCooldown} seconds.`);
+        }
+        if (marketDownturn) {
+            availableFunds += profitMatrix.sell50 / 2;
+            earningsTotal += profitMatrix.sell50 /2;
+            logMessage(`Sold 50 balloons from inventory for $${profitMatrix.sell50 / 2}. Delivery service will return in ${deliveryCooldown} seconds.`) 
         }
         else {
             availableFunds += profitMatrix.sell50;
@@ -241,6 +284,11 @@ function sellBalloons200() {
             earningsTotal += profitMatrix.sell200 * 2;
             logMessage(`Sold 200 balloons from inventory for $${profitMatrix.sell200 * 2}. Delivery service will return in ${deliveryCooldown * 2} seconds.`);
         }
+        if (marketDownturn) {
+            availableFunds += profitMatrix.sell200 / 2;
+            earningsTotal += profitMatrix.sell200 /2;
+            logMessage(`Sold 200 balloons from inventory for $${profitMatrix.sell200 / 2}. Delivery service will return in ${deliveryCooldown} seconds.`) 
+        }
         else {
             availableFunds += profitMatrix.sell200;
             earningsTotal += profitMatrix.sell200;
@@ -280,6 +328,11 @@ function sellBalloons1000() {
             availableFunds += profitMatrix.sell1000 * 2;
             earningsTotal += profitMatrix.sell1000 * 2;
             logMessage(`Sold 1000 balloons from inventory for $${profitMatrix.sell1000 * 2}. Delivery service will return in ${deliveryCooldown * 3} seconds.`);
+        }
+        if (marketDownturn) {
+            availableFunds += profitMatrix.sell1000 / 2;
+            earningsTotal += profitMatrix.sell1000 / 2;
+            logMessage(`Sold 1000 balloons from inventory for $${profitMatrix.sell1000 / 2}. Delivery service will return in ${deliveryCooldown} seconds.`) 
         }
         else {
             availableFunds += profitMatrix.sell1000;
@@ -458,6 +511,7 @@ function exportSave() {
         earningsTotal,
         inflateRate,
         deliveryCooldown,
+        passiveBps,
         workerHired: hireWorkerButton.disabled,
         superInflater: superBalloonInflater.disabled,
         electricInflater: electricBalloonInflater.disabled,
@@ -499,19 +553,21 @@ function importSave() {
             earningsTotal = data.earningsTotal;
             inflateRate = data.inflateRate;
             deliveryCooldown = data.deliveryCooldown;
+            passiveBps = data.passiveBps
 
             // Update the UI with the loaded data
             countDisplay.textContent = balloonInventory;
             heliumDisplay.textContent = heliumSupply;
             fundsDisplay.textContent = availableFunds;
+            bpsValue.innerHTML = passiveBps;
 
             // Restore other game states like buttons, etc.
             if (data.workerHired) {
                 hireWorkerButton.classList.remove("hidden"); // make it visible
                 hireWorkerButton.disabled = true;
                 balloonWorkerLoop();
-                document.getElementById("passiveLabel").classList.remove("hidden");
-                document.getElementById("passiveRate").classList.remove("hidden");
+                document.getElementById("passiveBps").classList.remove("hidden");
+                document.getElementById("bpsValue").classList.remove("hidden");
             }
 
 
@@ -543,6 +599,7 @@ function importSave() {
             alert("Save imported successfully!");
         } catch (error) {
             alert("Failed to import save. Please ensure the file is valid.");
+            console.log(error);
         }
     };
 
@@ -686,7 +743,16 @@ function loadGame() {
 
 }
 
-setInterval(activateProfitBoost, 30000); // 60000 milliseconds = 60 seconds
+function randomEventChoose() {
+    const availableEvents = [activateProfitBoost, activateMarketDownturn, null]
+    let randomEvent = availableEvents[Math.floor(Math.random() * availableEvents.length)];
+    return randomEvent;
+}
+
+setInterval(() => {
+    const event = randomEventChoose();
+    if (event) event();
+}, 30000);
 
 
 window.addEventListener("beforeunload", saveGame);
