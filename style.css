@@ -63,6 +63,14 @@
     display: none;
 }
 
+.locked {
+    visibility: visible; /* Ensure it's visible */
+    pointer-events: none; /* Prevent interaction */
+    opacity: 0.6; /* Dimmed look */
+}
+
+
+
 .gameControls {
     display: flex;
     justify-content: space-between;
