@@ -13,6 +13,19 @@
 </head>
 <body>
 
+    <div class="gameControls">
+        <div class="gameControlColumn">
+            <button id="resetGame">Reset Progress</button>
+            <button id="saveGame">Save Game</button>
+        </div>
+
+        <div class="gameControlColumn">
+            <button id="exportSave">Export Save</button>
+            <input type="file" id="importFile" accept=".json" />
+            <button id="importSave">Import Save</button>
+        </div>
+    </div>
+
     <div id="logContainer">
 
         -bash-3.2$ balloon-stand</br>
@@ -27,7 +40,7 @@
 
         <h1>Balloon Stand &#127880;</h1>
         <button id="mainControl" type="button">Blow a balloon!</button>
-        <button style = "display:none;" id="fiveControl" type="button">Blow 5 balloons!</button>
+        <button class="hidden" id="fiveControl" type="button">Blow 5 balloons!</button>
         <h2 id="inventoryLabel">Balloons available in inventory:</h2>
         <p id="inventoryQuantity">0</p>
 
@@ -45,8 +58,8 @@
             <button id="buyHelium" type="button">Purchase Helium Gas ($25)</button>
             <button id="buyElectricInflater" type="button">Purchase Powered Balloon Inflater ($150)</button>
             <button id="buySuperInflater" type="button">Purchase Five-Hose Balloon Super Inflater ($1000)</button>
-            <button style="display:none;" id="buyBalloonWorker" type="button">Hire an employee to inflate balloons ($2000)</button>
-            <button style="display:none;" id="oilChange" type="button">Take the delivery vans in for an oil change ($3000)</button>
+            <button class="hidden" id="buyBalloonWorker" type="button">Hire an employee to inflate balloons ($2000)</button>
+            <button class="hidden" id="oilChange" type="button">Take the delivery vans in for an oil change ($3000)</button>
         </div>
     </div>
 
@@ -55,24 +68,19 @@
         <div class="saleTypes">
             <button id="sellBalloons50" type="button">Fulfill Balloon Order (50 count)</button>
             <button id="sellBalloons200" type="button">Fulfill Balloon Order (200 count)</button>
-            <button style="display:none;" id="sellBalloons1000" type="button">Fulfill Balloon Order (1000 count)</button>
+            <button class="hidden" id="sellBalloons1000" type="button">Fulfill Balloon Order (1000 count)</button>
         </div>
     </div>
 
 </div>
 
+<div id="profitBoostBanner" class="hidden">
+    <p id="profitBoostMessage">The Balloon Fest has started! Earnings are doubled!</p>
+</div>
+
+
+
 <hr>
-
-<button id="resetGame">Reset Progress</button>
-<button id="saveGame">Save Game</button>
-
-
-<button id="exportSave">Export Save</button>
-<input type="file" id="importFile" accept=".json" />
-<button id="importSave">Import Save</button>
-
-
-
 
 
     <script src='balloonsMain.js'></script>

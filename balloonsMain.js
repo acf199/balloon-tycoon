@@ -131,6 +131,50 @@ function disableButtonWithCountdown(button, seconds) {
 
 let deliveryCooldown = 10
 
+let profitMatrix = {"sell50": 75, "sell200": 375, "sell1000": 2250, "sell6000": 15750};
+
+// Function to activate the profit boost
+let profitBoost = false;
+const profitBoostDuration = 10; // in seconds
+let profitBoostTimer = null;
+let profitBoostCountdown = null;
+
+function activateProfitBoost() {
+    if (!profitBoost) {
+        const randomChance = Math.random();
+        if (randomChance < 0.2) {
+            profitBoost = true;
+            let timeLeft = profitBoostDuration;
+
+            const banner = document.getElementById('profitBoostBanner');
+            const bannerMsg = document.getElementById('profitBoostMessage');
+
+            logMessage(`💸 Profit Boost Activated! Earnings are doubled for ${profitBoostDuration} seconds.`);
+            banner.classList.add('active');
+            bannerMsg.textContent = `💸 Profit Boost Active! ${timeLeft} seconds remaining...`;
+
+            // Countdown interval
+            profitBoostCountdown = setInterval(() => {
+                timeLeft--;
+                bannerMsg.textContent = `💸 Profit Boost Active! ${timeLeft} seconds remaining...`;
+                if (timeLeft <= 0) {
+                    clearInterval(profitBoostCountdown);
+                }
+            }, 1000);
+
+            // End profit boost after the duration
+            profitBoostTimer = setTimeout(() => {
+                profitBoost = false;
+                logMessage("Profit Boost has ended.");
+                banner.classList.remove('active');
+                clearInterval(profitBoostCountdown);
+            }, profitBoostDuration * 1000);
+        }
+    }
+}
+
+
+
 
 const sellButton = document.getElementById("sellBalloons50");
 sellButton.addEventListener("click", sellBalloons50);
@@ -140,19 +184,28 @@ function sellBalloons50() {
     const message = document.createElement("div");
     message.classList.add("logMessage");
 
+
     if (balloonInventory >= 50) {
-        availableFunds += 75;
-        earningsTotal += 75;
+        if (profitBoost) {
+            availableFunds += profitMatrix.sell50 * 2;
+            earningsTotal += profitMatrix.sell50 * 2;
+            logMessage(`Sold 50 balloons from inventory for $${profitMatrix.sell50 * 2}. Delivery service will return in ${deliveryCooldown} seconds.`);
+        }
+        else {
+            availableFunds += profitMatrix.sell50;
+            earningsTotal += profitMatrix.sell50;
+            logMessage(`Sold 50 balloons from inventory for $${profitMatrix.sell50}. Delivery service will return in ${deliveryCooldown} seconds.`);
+        }
+
         balloonInventory -= 50;
         fundsDisplay.innerHTML = availableFunds;
         countDisplay.innerHTML = balloonInventory;
 
-        logMessage(`Sold 50 balloons from inventory for $75. Delivery service will return in ${deliveryCooldown} seconds.`);
 
         disableButtonWithCountdown(sellButton, deliveryCooldown);
 
-        if (earningsTotal >= 1000) {
-            sellButton3.removeAttribute("style");
+        if (earningsTotal >= 1000 && sellButton3.classList.contains("hidden")) {
+            sellButton3.classList.remove("hidden");
             logMessage("$1000 total earnings reached. New bulk delivery unlocked.");
         }
 
@@ -182,18 +235,26 @@ function sellBalloons200() {
     message.classList.add("logMessage");
 
     if (balloonInventory >= 200) {
-        availableFunds += 300;
-        earningsTotal += 300;
+
+        if (profitBoost) {
+            availableFunds += profitMatrix.sell200 * 2;
+            earningsTotal += profitMatrix.sell200 * 2;
+            logMessage(`Sold 200 balloons from inventory for $${profitMatrix.sell200 * 2}. Delivery service will return in ${deliveryCooldown * 2} seconds.`);
+        }
+        else {
+            availableFunds += profitMatrix.sell200;
+            earningsTotal += profitMatrix.sell200;
+            logMessage(`Sold 200 balloons from inventory for $${profitMatrix.sell200}. Delivery service will return in ${deliveryCooldown * 2} seconds.`);
+        }
+
         balloonInventory -= 200;
         fundsDisplay.innerHTML = availableFunds;
         countDisplay.innerHTML = balloonInventory;
 
-        logMessage(`Sold 200 balloons in bulk from inventory for $300. Delivery truck will return in ${deliveryCooldown * 2} seconds`);
-
         disableButtonWithCountdown(sellButton2, deliveryCooldown * 2);
 
-        if (earningsTotal >= 1000) {
-            sellButton3.removeAttribute("style");
+        if (earningsTotal >= 1000 && sellButton3.classList.contains("hidden")) {
+            sellButton3.classList.remove("hidden");
             logMessage("$1000 total earnings reached. New bulk delivery unlocked.");
         }
 
@@ -214,13 +275,21 @@ function sellBalloons1000() {
     message.classList.add("logMessage");
 
     if (balloonInventory >= 1000) {
-        availableFunds += 1800;
-        earningsTotal += 1800;
+
+        if (profitBoost) {
+            availableFunds += profitMatrix.sell1000 * 2;
+            earningsTotal += profitMatrix.sell1000 * 2;
+            logMessage(`Sold 1000 balloons from inventory for $${profitMatrix.sell1000 * 2}. Delivery service will return in ${deliveryCooldown * 3} seconds.`);
+        }
+        else {
+            availableFunds += profitMatrix.sell1000;
+            earningsTotal += profitMatrix.sell1000;
+            logMessage(`Sold 1000 balloons from inventory for $${profitMatrix.sell1000}. Delivery service will return in ${deliveryCooldown * 3} seconds.`);
+        }
+
         balloonInventory -= 1000;
         fundsDisplay.innerHTML = availableFunds;
         countDisplay.innerHTML = balloonInventory;
-
-        logMessage(`Sold 1000 balloons in bulk from inventory for $1800. Delivery truck will return in ${deliveryCooldown * 3} seconds`);
 
         disableButtonWithCountdown(sellButton3, deliveryCooldown * 3);
 
@@ -274,13 +343,13 @@ function purchaseSuperInflater() {
     if (availableFunds >= 1000) {
         availableFunds -= 1000;
         fundsDisplay.innerHTML = availableFunds;
-        superButton.removeAttribute("style")
+        superButton.classList.remove("hidden")
 
 
 
         superBalloonInflater.disabled = true;
 
-        hireWorkerButton.removeAttribute("style");
+        hireWorkerButton.classList.remove("hidden");
 
         logMessage("Five-Hose Balloon Super Inflater purchased for $1000. Balloons can now be inflated five (5) at a time.");
     }
@@ -295,11 +364,15 @@ let workerStatus = null
 hireWorkerButton.addEventListener("click", hireWorker);
 
 function balloonWorkerLoop() {
-    if (workerStatus !== null) return;
+    if (workerStatus !== null) {
+        console.log("Worker already running");
+        return;
+    }
     workerStatus = setInterval(() => {
         blowBalloon();
     }, staffRate);
 }
+
 
 
 function hireWorker() {
@@ -311,7 +384,7 @@ function hireWorker() {
         availableFunds -= 2000;
         balloonWorkerLoop();
         hireWorkerButton.disabled = true;
-        oilChangeButton.removeAttribute("style");
+        oilChangeButton.classList.remove("hidden");
         logMessage("Worker hired. They will now help inflate balloons automatically.");
         if (terminalPrinter.children.length >= MAX_LOGS) {
             terminalPrinter.firstChild.remove();
@@ -353,7 +426,7 @@ function exportSave() {
         workerHired: hireWorkerButton.disabled,
         superInflater: superBalloonInflater.disabled,
         electricInflater: electricBalloonInflater.disabled,
-        fiveButtonVisible: !superButton.hasAttribute("style"),
+        fiveButtonVisible: !superButton.classList.contains("hidden"),
         workerIntervalActive: workerStatus !== null,
         oilChangePurchased: oilChangeButton.disabled
     };
@@ -411,11 +484,20 @@ function importSave() {
             }
 
             if (data.fiveButtonVisible) {
-                superButton.removeAttribute("style"); // Show the five balloons button
+                superButton.classList.remove("hidden"); // Show the five balloons button
             }
 
             if (data.oilChangePurchased) {
                 oilChangeButton.disabled = true;
+                deliveryCooldown /= 2
+            }
+
+            if (data.superInflater) {
+                hireWorkerButton.classList.remove("hidden");
+            }
+
+            if (data.workerHired) {
+                oilChangeButton.classList.remove("hidden");
             }
 
             alert("Save imported successfully!");
@@ -428,14 +510,16 @@ function importSave() {
 }
 
 
+let resetting = false;
 
 
 document.getElementById("resetGame").addEventListener("click", () => {
     if (confirm("Are you sure you want to reset your progress?")) {
-        // Wipe localStorage
+        resetting = true;
+
         localStorage.removeItem("balloonTycoonSave");
 
-        // Reset variables to avoid flicker
+        // Reset state
         balloonInventory = 0;
         heliumSupply = 100;
         availableFunds = 100;
@@ -443,18 +527,19 @@ document.getElementById("resetGame").addEventListener("click", () => {
         inflateRate = 1;
         deliveryCooldown = 10;
 
-        // Clear worker if active
+        sellButton3.classList.add("hidden");
+        oilChangeButton.classList.add("hidden");
+        hireWorkerButton.classList.add("hidden");
+
         if (workerStatus) {
             clearInterval(workerStatus);
             workerStatus = null;
         }
 
-        // Clear the DOM displays too (optional but helps avoid UI flicker)
         countDisplay.textContent = balloonInventory;
         heliumDisplay.textContent = heliumSupply;
         fundsDisplay.textContent = availableFunds;
 
-        // Delay the reload to let everything settle
         setTimeout(() => {
             location.reload();
         }, 200);
@@ -462,10 +547,14 @@ document.getElementById("resetGame").addEventListener("click", () => {
 });
 
 
+const manualSave = document.getElementById("saveGame");
+manualSave.addEventListener("click", saveGame);
 
 
 function saveGame() {
-    console.log("Saving game...");  // Check if this gets logged
+    if (resetting) return; // prevent saving on reset
+
+    console.log("Saving game...");
     const saveData = {
         balloonInventory,
         heliumSupply,
@@ -476,21 +565,22 @@ function saveGame() {
         workerHired: hireWorkerButton.disabled,
         superInflater: superBalloonInflater.disabled,
         electricInflater: electricBalloonInflater.disabled,
-        fiveButtonVisible: !superButton.hasAttribute("style"),
+        fiveButtonVisible: !superButton.classList.contains("hidden"),
         workerIntervalActive: workerStatus !== null,
         oilChangePurchased: oilChangeButton.disabled
     };
 
     localStorage.setItem("balloonTycoonSave", JSON.stringify(saveData));
+    logMessage("Saving progress...")
 }
 
 function loadGame() {
     const saved = localStorage.getItem("balloonTycoonSave");
     if (!saved) {
         // Set default visibility state
-        hireWorkerButton.setAttribute("style", "display:none;");
-        superButton.setAttribute("style", "display:none;");
-        oilChangeButton.setAttribute("style", "display:none;");
+        hireWorkerButton.classList.add("hidden");
+        superButton.classList.add("hidden");
+        oilChangeButton.classList.add("hidden");
         return;
     }
 
@@ -511,7 +601,7 @@ function loadGame() {
         hireWorkerButton.disabled = true;
         balloonWorkerLoop();
     } else {
-        hireWorkerButton.setAttribute("style", "display:none;");
+        hireWorkerButton.classList.add("hidden");
     }
 
     if (data.superInflater) {
@@ -523,15 +613,19 @@ function loadGame() {
     }
 
     if (data.fiveButtonVisible) {
-        superButton.removeAttribute("style");
+        superButton.classList.remove("hidden");
     }
 
     if (data.oilChangePurchased) {
         oilChangeButton.disabled = true;
+        deliveryCooldown /= 2
     } else {
-        oilChangeButton.setAttribute("style", "display:none;");
+        oilChangeButton.classList.add("hidden");
     }
 }
+
+
+setInterval(activateProfitBoost, 30000); // 60000 milliseconds = 60 seconds
 
 
 window.addEventListener("beforeunload", saveGame);
