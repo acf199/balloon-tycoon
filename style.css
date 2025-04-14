@@ -94,3 +94,7 @@
 #eventBanner.active {
     display: block; /* Show when active */
 }
+
+p#funds::before {
+    content: "$";
+}

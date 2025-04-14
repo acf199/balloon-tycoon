@@ -100,7 +100,7 @@ function buyHelium() {
         availableFunds -= 25;
         heliumSupply += 50;
         heliumDisplay.innerHTML = heliumSupply
-        fundsDisplay.innerHTML = availableFunds
+        fundsDisplay.innerHTML = availableFunds.toFixed(2);
         logMessage("Success! Purchased 50 cu. ft. of Helium Gas for $25");
     }
     else {
@@ -212,7 +212,7 @@ function activateMarketDownturn() {
 }
 
 
-
+let bulkButtonUnlocked = false;
 
 const sellButton = document.getElementById("sellBalloons50");
 sellButton.addEventListener("click", sellBalloons50);
@@ -232,7 +232,7 @@ function sellBalloons50() {
         if (marketDownturn) {
             availableFunds += profitMatrix.sell50 / 2;
             earningsTotal += profitMatrix.sell50 /2;
-            logMessage(`Sold 50 balloons from inventory for $${profitMatrix.sell50 / 2}. Delivery service will return in ${deliveryCooldown} seconds.`) 
+            logMessage(`Sold 50 balloons from inventory for $${profitMatrix.sell50 / 2}. Delivery service will return in ${deliveryCooldown} seconds.`)
         }
         else {
             availableFunds += profitMatrix.sell50;
@@ -241,15 +241,16 @@ function sellBalloons50() {
         }
 
         balloonInventory -= 50;
-        fundsDisplay.innerHTML = availableFunds;
+        fundsDisplay.innerHTML = availableFunds.toFixed(2);
         countDisplay.innerHTML = balloonInventory;
 
 
         disableButtonWithCountdown(sellButton, deliveryCooldown);
 
-        if (earningsTotal >= 1000 && sellButton3.classList.contains("hidden")) {
+        if (earningsTotal >= 1000 && bulkButtonUnlocked) {
             sellButton3.classList.remove("hidden");
             logMessage("$1000 total earnings reached. New bulk delivery unlocked.");
+            bulkButtonUnlocked = true;
         }
 
 
@@ -287,7 +288,7 @@ function sellBalloons200() {
         if (marketDownturn) {
             availableFunds += profitMatrix.sell200 / 2;
             earningsTotal += profitMatrix.sell200 /2;
-            logMessage(`Sold 200 balloons from inventory for $${profitMatrix.sell200 / 2}. Delivery service will return in ${deliveryCooldown} seconds.`) 
+            logMessage(`Sold 200 balloons from inventory for $${profitMatrix.sell200 / 2}. Delivery service will return in ${deliveryCooldown} seconds.`)
         }
         else {
             availableFunds += profitMatrix.sell200;
@@ -296,14 +297,15 @@ function sellBalloons200() {
         }
 
         balloonInventory -= 200;
-        fundsDisplay.innerHTML = availableFunds;
+        fundsDisplay.innerHTML = availableFunds.toFixed(2);
         countDisplay.innerHTML = balloonInventory;
 
         disableButtonWithCountdown(sellButton2, deliveryCooldown * 2);
 
-        if (earningsTotal >= 1000 && sellButton3.classList.contains("hidden")) {
+        if (earningsTotal >= 1000 && bulkButtonUnlocked) {
             sellButton3.classList.remove("hidden");
             logMessage("$1000 total earnings reached. New bulk delivery unlocked.");
+            bulkButtonUnlocked = true;
         }
 
 
@@ -332,7 +334,7 @@ function sellBalloons1000() {
         if (marketDownturn) {
             availableFunds += profitMatrix.sell1000 / 2;
             earningsTotal += profitMatrix.sell1000 / 2;
-            logMessage(`Sold 1000 balloons from inventory for $${profitMatrix.sell1000 / 2}. Delivery service will return in ${deliveryCooldown} seconds.`) 
+            logMessage(`Sold 1000 balloons from inventory for $${profitMatrix.sell1000 / 2}. Delivery service will return in ${deliveryCooldown} seconds.`)
         }
         else {
             availableFunds += profitMatrix.sell1000;
@@ -341,7 +343,7 @@ function sellBalloons1000() {
         }
 
         balloonInventory -= 1000;
-        fundsDisplay.innerHTML = availableFunds;
+        fundsDisplay.innerHTML = availableFunds.toFixed(2);
         countDisplay.innerHTML = balloonInventory;
 
         disableButtonWithCountdown(sellButton3, deliveryCooldown * 3);
@@ -370,7 +372,7 @@ function purchaseInflater() {
     if (availableFunds >= 150) {
         availableFunds -= 150;
         inflateRate = 0.5;
-        fundsDisplay.innerHTML = availableFunds;
+        fundsDisplay.innerHTML = availableFunds.toFixed(2);
 
         electricBalloonInflater.disabled = true;
 
@@ -395,7 +397,7 @@ function purchaseSuperInflater() {
 
     if (availableFunds >= 1000) {
         availableFunds -= 1000;
-        fundsDisplay.innerHTML = availableFunds;
+        fundsDisplay.innerHTML = availableFunds.toFixed(2);
         superButton.classList.remove("hidden")
 
 
@@ -445,7 +447,7 @@ function hireWorker() {
 
     if (availableFunds >= 2000) {
         availableFunds -= 2000;
-        fundsDisplay.innerHTML = availableFunds
+        fundsDisplay.innerHTML = availableFunds.toFixed(2);
         passiveBps = 1;
         bpsValue.innerHTML = passiveBps;
         balloonWorkerLoop();
@@ -473,7 +475,7 @@ oilChangeButton.addEventListener("click", oilChange);
 function oilChange() {
     if (availableFunds >= 3000) {
         availableFunds -= 3000
-        fundsDisplay.innerHTML = availableFunds
+        fundsDisplay.innerHTML = availableFunds.toFixed(2);
         oilChangeButton.disabled = true;
         deliveryCooldown /= 2;
         trainingButton.classList.remove("hidden");
@@ -512,6 +514,7 @@ function exportSave() {
         inflateRate,
         deliveryCooldown,
         passiveBps,
+        bulkButtonUnlocked,
         workerHired: hireWorkerButton.disabled,
         superInflater: superBalloonInflater.disabled,
         electricInflater: electricBalloonInflater.disabled,
@@ -553,7 +556,9 @@ function importSave() {
             earningsTotal = data.earningsTotal;
             inflateRate = data.inflateRate;
             deliveryCooldown = data.deliveryCooldown;
-            passiveBps = data.passiveBps
+            passiveBps = data.passiveBps;
+
+            bulkButtonUnlocked = data.bulkButtonUnlocked;
 
             // Update the UI with the loaded data
             countDisplay.textContent = balloonInventory;
@@ -594,6 +599,17 @@ function importSave() {
 
             if (data.workerHired) {
                 oilChangeButton.classList.remove("hidden");
+            }
+
+            if (bulkButtonUnlocked) {
+                sellButton3.classList.remove("hidden")
+            }
+
+            if (data.trainingManualPurchased) {
+                trainingButton.classList.remove("hidden")
+                trainingButton.disabled = true;
+                passiveBps = 5;
+                bpsValue.innerHTML = passiveBps;
             }
 
             alert("Save imported successfully!");
@@ -660,6 +676,7 @@ function saveGame() {
         inflateRate,
         deliveryCooldown,
         passiveBps,
+        bulkButtonUnlocked,
         workerHired: hireWorkerButton.disabled,
         superInflater: superBalloonInflater.disabled,
         electricInflater: electricBalloonInflater.disabled,
@@ -692,6 +709,7 @@ function loadGame() {
     earningsTotal = data.earningsTotal;
     inflateRate = data.inflateRate;
     deliveryCooldown = data.deliveryCooldown;
+    bulkButtonUnlocked = data.bulkButtonUnlocked;
 
     countDisplay.textContent = balloonInventory;
     heliumDisplay.textContent = heliumSupply;
@@ -734,8 +752,13 @@ function loadGame() {
         trainingButton.classList.remove("hidden"); // <--- Ensure it's visible
     }
 
+    if (bulkButtonUnlocked) {
+        sellButton3.classList.remove("hidden")
+    }
+
     // Apply training manual effect if already purchased
     if (data.trainingManualPurchased) {
+        trainingButton.classList.remove("hidden")
         trainingButton.disabled = true;
         passiveBps = 5;
         bpsValue.innerHTML = passiveBps;
