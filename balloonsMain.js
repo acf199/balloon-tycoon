@@ -321,7 +321,7 @@ function purchaseInflater() {
 
         electricBalloonInflater.disabled = true;
 
-        logMessage("Electric Inflater purchased for $150. Balloons now only take 0.5 cu. ft. of Helium Gas to inflate");
+        logMessage("Electric Inflator purchased for $150. Balloons now only take 0.5 cu. ft. of Helium Gas to inflate");
     }
     else {
         logMessage("Insufficient Funds.");
@@ -351,7 +351,7 @@ function purchaseSuperInflater() {
 
         hireWorkerButton.classList.remove("hidden");
 
-        logMessage("Five-Hose Balloon Super Inflater purchased for $1000. Balloons can now be inflated five (5) at a time.");
+        logMessage("Five-Hose Balloon Super Inflator purchased for $1000. Balloons can now be inflated five (5) at a time.");
     }
     else {
         logMessage("Insufficient Funds.");
@@ -369,11 +369,21 @@ function balloonWorkerLoop() {
         return;
     }
     workerStatus = setInterval(() => {
-        blowBalloon();
+        bpsLabel.classList.remove("hidden")
+        bpsValue.classList.remove("hidden");
+        if (passiveBps == 5) {
+            blowFiveBalloons();
+        }
+        else {
+            blowBalloon();
+        }
     }, staffRate);
 }
 
+let passiveBps = 1
 
+const bpsLabel = document.getElementById("passiveBps");
+const bpsValue = document.getElementById("bpsValue");
 
 function hireWorker() {
 
@@ -382,7 +392,11 @@ function hireWorker() {
 
     if (availableFunds >= 2000) {
         availableFunds -= 2000;
+        fundsDisplay.innerHTML = availableFunds
+        passiveBps = 1;
+        bpsValue.innerHTML = passiveBps;
         balloonWorkerLoop();
+
         hireWorkerButton.disabled = true;
         oilChangeButton.classList.remove("hidden");
         logMessage("Worker hired. They will now help inflate balloons automatically.");
@@ -397,6 +411,9 @@ function hireWorker() {
 }
 
 
+const trainingButton = document.getElementById("trainingManual");
+
+
 const oilChangeButton = document.getElementById("oilChange");
 oilChangeButton.addEventListener("click", oilChange);
 
@@ -406,7 +423,25 @@ function oilChange() {
         fundsDisplay.innerHTML = availableFunds
         oilChangeButton.disabled = true;
         deliveryCooldown /= 2;
+        trainingButton.classList.remove("hidden");
         logMessage("Delivery cooldowns cut in half!");
+    }
+    else {
+        logMessage("Insufficient Funds.")
+    }
+}
+
+trainingButton.addEventListener("click", trainingManual)
+
+function trainingManual() {
+    if (availableFunds >= 4000) {
+        availableFunds -= 4000
+        fundsDisplay.innerHTML = availableFunds
+        trainingButton.disabled = true;
+        passiveBps = 5
+        bpsValue.innerHTML = passiveBps;
+        // trainingButton.classList.remove("hidden"); FOR ADDING NEW UPGRADE
+        logMessage("Workers can now use the super inflator. Bps increased.");
     }
     else {
         logMessage("Insufficient Funds.")
@@ -428,7 +463,8 @@ function exportSave() {
         electricInflater: electricBalloonInflater.disabled,
         fiveButtonVisible: !superButton.classList.contains("hidden"),
         workerIntervalActive: workerStatus !== null,
-        oilChangePurchased: oilChangeButton.disabled
+        oilChangePurchased: oilChangeButton.disabled,
+        trainingManualPurchased: trainingButton.disabled
     };
 
     const blob = new Blob([JSON.stringify(saveData)], { type: "application/json" });
@@ -471,9 +507,13 @@ function importSave() {
 
             // Restore other game states like buttons, etc.
             if (data.workerHired) {
+                hireWorkerButton.classList.remove("hidden"); // make it visible
                 hireWorkerButton.disabled = true;
-                balloonWorkerLoop(); // Re-hire the worker if they were hired
+                balloonWorkerLoop();
+                document.getElementById("passiveLabel").classList.remove("hidden");
+                document.getElementById("passiveRate").classList.remove("hidden");
             }
+
 
             if (data.superInflater) {
                 superBalloonInflater.disabled = true;
@@ -562,12 +602,14 @@ function saveGame() {
         earningsTotal,
         inflateRate,
         deliveryCooldown,
+        passiveBps,
         workerHired: hireWorkerButton.disabled,
         superInflater: superBalloonInflater.disabled,
         electricInflater: electricBalloonInflater.disabled,
         fiveButtonVisible: !superButton.classList.contains("hidden"),
         workerIntervalActive: workerStatus !== null,
-        oilChangePurchased: oilChangeButton.disabled
+        oilChangePurchased: oilChangeButton.disabled,
+        trainingManualPurchased: trainingButton.disabled
     };
 
     localStorage.setItem("balloonTycoonSave", JSON.stringify(saveData));
@@ -581,6 +623,7 @@ function loadGame() {
         hireWorkerButton.classList.add("hidden");
         superButton.classList.add("hidden");
         oilChangeButton.classList.add("hidden");
+        trainingButton.classList.add("hidden");
         return;
     }
 
@@ -598,32 +641,50 @@ function loadGame() {
     fundsDisplay.textContent = availableFunds;
 
     if (data.workerHired) {
+        hireWorkerButton.classList.remove("hidden"); // Make sure it's visible
         hireWorkerButton.disabled = true;
         balloonWorkerLoop();
-    } else {
+
+        bpsLabel.classList.remove("hidden");
+        bpsValue.classList.remove("hidden");
+    }
+
+    else {
         hireWorkerButton.classList.add("hidden");
     }
 
+        // Show hireWorkerButton if the user unlocked it (even if it's already bought)
     if (data.superInflater) {
         superBalloonInflater.disabled = true;
+        hireWorkerButton.classList.remove("hidden"); // <--- Ensure it's visible
     }
 
-    if (data.electricInflater) {
-        electricBalloonInflater.disabled = true;
+    // Show oil change if the user has hired a worker
+    if (data.workerHired) {
+        hireWorkerButton.disabled = true;
+        balloonWorkerLoop();
+        bpsLabel.classList.remove("hidden");
+        bpsValue.classList.remove("hidden");
+
+        oilChangeButton.classList.remove("hidden"); // <--- Ensure it's visible
     }
 
-    if (data.fiveButtonVisible) {
-        superButton.classList.remove("hidden");
-    }
-
+    // Show training manual if oil change was bought
     if (data.oilChangePurchased) {
         oilChangeButton.disabled = true;
-        deliveryCooldown /= 2
-    } else {
-        oilChangeButton.classList.add("hidden");
-    }
-}
+        deliveryCooldown /= 2;
 
+        trainingButton.classList.remove("hidden"); // <--- Ensure it's visible
+    }
+
+    // Apply training manual effect if already purchased
+    if (data.trainingManualPurchased) {
+        trainingButton.disabled = true;
+        passiveBps = 5;
+        bpsValue.innerHTML = passiveBps;
+    }
+
+}
 
 setInterval(activateProfitBoost, 30000); // 60000 milliseconds = 60 seconds
 
