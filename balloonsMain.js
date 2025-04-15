@@ -845,5 +845,99 @@ setInterval(() => {
 }, 30000);
 
 
+
+const ordersContainer = document.getElementById("ordersContainer");
+
+const orderTemplates = [
+  { title: "🎈 Party Supply Mega-Pack", required: 300, reward: 600 },
+  { title: "🎪 Circus Contract", required: 500, reward: 1200 },
+  { title: "🎉 Birthday Bonanza", required: 100, reward: 200 },
+  { title: "🛍️ Retail Store Stock", required: 750, reward: 1600 },
+  { title: "🏫 School Carnival Kit", required: 150, reward: 350 },
+];
+
+let activeOrders = [];
+let orderIdCounter = 0;
+const maxActiveOrders = 3;
+const orderLifespan = 30; // seconds
+
+function spawnSpecialOrder() {
+    if (activeOrders.length >= maxActiveOrders) return;
+
+    const randomOrder = { ...orderTemplates[Math.floor(Math.random() * orderTemplates.length)] };
+    randomOrder.id = ++orderIdCounter;
+    randomOrder.timeLeft = orderLifespan;
+
+    activeOrders.push(randomOrder);
+    renderOrder(randomOrder);
+
+    // Countdown + Expiration
+    const countdownInterval = setInterval(() => {
+        const order = activeOrders.find(o => o.id === randomOrder.id);
+        if (!order) return clearInterval(countdownInterval);
+
+        order.timeLeft--;
+        const timeEl = document.getElementById(`order-time-${order.id}`);
+        if (timeEl) timeEl.textContent = `${order.timeLeft}s left`;
+
+        if (order.timeLeft <= 0) {
+        removeOrder(order.id);
+        clearInterval(countdownInterval);
+        }
+    }, 1000);
+}
+
+function renderOrder(order) {
+const card = document.createElement("div");
+card.classList.add("orderCard");
+card.setAttribute("id", `order-${order.id}`);
+
+card.innerHTML = `
+    <strong>${order.title}</strong><br>
+    Needs: ${order.required} balloons<br>
+    Reward: $${order.reward}<br>
+    <span id="order-time-${order.id}">${order.timeLeft}s left</span><br>
+    <button data-id="${order.id}">Fulfill Order</button>
+`;
+
+ordersContainer.appendChild(card);
+}
+
+function removeOrder(id) {
+    activeOrders = activeOrders.filter(o => o.id !== id);
+    const card = document.getElementById(`order-${id}`);
+    if (card) card.remove();
+  }
+
+  ordersContainer.addEventListener("click", (e) => {
+    if (e.target.tagName === "BUTTON") {
+      const id = parseInt(e.target.dataset.id);
+      const order = activeOrders.find(o => o.id === id);
+
+      if (balloonInventory >= order.required) {
+        balloonInventory -= order.required;
+        availableFunds += order.reward;
+        earningsTotal += order.reward;
+
+        countDisplay.textContent = balloonInventory;
+        fundsDisplay.textContent = availableFunds;
+
+        logMessage(`✅ Fulfilled: ${order.title} for $${order.reward}`);
+        removeOrder(order.id);
+      } else {
+        logMessage(`❌ Not enough balloons for: ${order.title}`);
+      }
+    }
+});
+
+setInterval(spawnSpecialOrder, 60000); // one new order every 60s
+spawnSpecialOrder(); // spawn one on load
+
+
+
+
+
+
+
 window.addEventListener("beforeunload", saveGame);
 window.addEventListener("load", loadGame);
