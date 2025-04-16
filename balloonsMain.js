@@ -654,47 +654,87 @@ function importSave() {
 
 let resetting = false;
 
+const resetButton = document.getElementById("resetGame");
 
-document.getElementById("resetGame").addEventListener("click", () => {
+resetButton.addEventListener("click", resetGame);
+
+
+function resetGame() {
     if (confirm("Are you sure you want to reset your progress?")) {
-        resetting = true;
-
-        localStorage.removeItem("balloonTycoonSave");
-
-        // Reset state
+        // Step 1: Reset variables
         balloonInventory = 0;
         heliumSupply = 100;
         availableFunds = 100;
         earningsTotal = 100;
         inflateRate = 1;
         deliveryCooldown = 10;
-
-        sellButton3.disabled = true;
-        sellButton3.classList.add("locked");
-        sellButton3.innerHTML = "???";
-
-        oilChangeButton.disabled = true;
-        oilChangeButton.classList.add("locked");
-        oilChangeButton.innerHTML = "???";
-
-        hireWorkerButton.disabled = true;
-        hireWorkerButton.classList.add("locked");
-        hireWorkerButton.innerHTML = "???";
+        passiveBps = 0;
+        bulkButtonUnlocked = false;
 
         if (workerStatus) {
             clearInterval(workerStatus);
             workerStatus = null;
         }
 
+        // Step 2: Reset DOM elements
         countDisplay.textContent = balloonInventory;
         heliumDisplay.textContent = heliumSupply;
         fundsDisplay.textContent = availableFunds;
+        bpsValue.innerHTML = passiveBps;
 
-        setTimeout(() => {
-            location.reload();
-        }, 200);
+        hireWorkerButton.disabled = true;
+        hireWorkerButton.classList.add("locked");
+        hireWorkerButton.innerHTML = "???";
+
+        oilChangeButton.disabled = true;
+        oilChangeButton.classList.add("locked");
+        oilChangeButton.innerHTML = "???";
+
+        trainingButton.disabled = true;
+        trainingButton.classList.add("locked");
+        trainingButton.innerHTML = "???";
+
+        sellButton3.disabled = true;
+        sellButton3.classList.add("locked");
+        sellButton3.innerHTML = "???";
+
+        superBalloonInflater.disabled = false;
+        superButton.disabled = true;
+        superButton.classList.add("locked");
+        superButton.innerHTML = "???";
+
+        electricBalloonInflater.disabled = false;
+
+        bpsLabel.classList.add("hidden");
+        bpsValue.classList.add("hidden");
+
+        // Step 3: Overwrite localStorage with clean slate
+        const blankSave = {
+            balloonInventory: 0,
+            heliumSupply: 100,
+            availableFunds: 100,
+            earningsTotal: 100,
+            inflateRate: 1,
+            deliveryCooldown: 10,
+            passiveBps: 0,
+            bulkButtonUnlocked: false,
+            workerHired: false,
+            superInflater: false,
+            electricInflater: false,
+            fiveButtonVisible: false,
+            workerIntervalActive: false,
+            oilChangePurchased: false,
+            trainingManualPurchased: false
+        };
+
+        localStorage.setItem("balloonTycoonSave", JSON.stringify(blankSave));
+
+        logMessage("Progress has been reset.");
     }
-});
+}
+
+
+
 
 
 const manualSave = document.getElementById("saveGame");
@@ -729,109 +769,99 @@ function saveGame() {
 
 function loadGame() {
     const saved = localStorage.getItem("balloonTycoonSave");
-    if (!saved) {
-        // Set default visibility state
-        hireWorkerButton.disabled = true;
-        hireWorkerButton.classList.add("locked");
-        hireWorkerButton.innerHTML = "???";
-
-        superButton.disabled = true;
-        superButton.classList.add("locked");
-        superButton.innerHTML = "???";
-
-        oilChangeButton.disabled = true;
-        oilChangeButton.classList.add("locked");
-        oilChangeButton.innerHTML = "???";
-
-        trainingButton.disabled = true;
-        trainingButton.classList.add("locked");
-        trainingButton.innerHTML = "???";
-        return;
-    }
+    if (!saved) return;
 
     const data = JSON.parse(saved);
 
+    // Restore core variables
     balloonInventory = data.balloonInventory;
     heliumSupply = data.heliumSupply;
     availableFunds = data.availableFunds;
     earningsTotal = data.earningsTotal;
     inflateRate = data.inflateRate;
     deliveryCooldown = data.deliveryCooldown;
-    bulkButtonUnlocked = data.bulkButtonUnlocked;
+    passiveBps = data.passiveBps || 0;
+    bulkButtonUnlocked = data.bulkButtonUnlocked || false;
 
     countDisplay.textContent = balloonInventory;
     heliumDisplay.textContent = heliumSupply;
     fundsDisplay.textContent = availableFunds;
+    bpsValue.textContent = passiveBps;
 
-    if (data.workerHired) {
-        hireWorkerButton.disabled = false;
-        hireWorkerButton.classList.remove("locked");
-        hireWorkerButton.innerHTML = "Hire an employee to inflate balloons ($2000)"; // Make sure it's visible
-        hireWorkerButton.disabled = true;
-        balloonWorkerLoop();
-
-        bpsLabel.classList.remove("hidden");
-        bpsValue.classList.remove("hidden");
+    // Electric inflator
+    if (data.electricInflater) {
+        electricBalloonInflater.disabled = true;
+        inflateRate = 0.5;
     }
 
-    else {
+    // Super inflator
+    if (data.superInflater) {
+        superBalloonInflater.disabled = true;
+        superButton.classList.remove("locked");
+        superButton.disabled = false;
+        superButton.innerHTML = "Blow five balloons!";
+    } else {
+        superButton.classList.add("locked");
+        superButton.disabled = true;
+        superButton.innerHTML = "???";
+    }
+
+    // Worker
+    if (data.workerHired) {
         hireWorkerButton.disabled = true;
+        hireWorkerButton.classList.remove("locked");
+        hireWorkerButton.innerHTML = "Hire an employee to inflate balloons ($2000)";
+        balloonWorkerLoop();
+        bpsLabel.classList.remove("hidden");
+        bpsValue.classList.remove("hidden");
+    } else {
         hireWorkerButton.classList.add("locked");
+        hireWorkerButton.disabled = true;
         hireWorkerButton.innerHTML = "???";
     }
 
-    if (data.electricInflater) {
-        inflateRate = 0.5;
-        electricBalloonInflater.disabled = true;
-    }
-
-    if (data.superInflater) {
-        superBalloonInflater.disabled = true;
-        hireWorkerButton.disabled = false;
-        hireWorkerButton.classList.remove("locked");
-        hireWorkerButton.innerHTML = "Hire an employee to inflate balloons ($2000)"; // <--- Ensure it's visible
-    }
-
-    // Show oil change if the user has hired a worker
-    if (data.workerHired) {
-        hireWorkerButton.disabled = true;
-        balloonWorkerLoop();
-        bpsLabel.classList.remove("hidden");
-        bpsValue.classList.remove("hidden");
-
-
-        oilChangeButton.disabled = false;
-        oilChangeButton.classList.remove("locked");
-        oilChangeButton.innerHTML = "Take the delivery vans in for an oil change ($3000)"; // <--- Ensure it's visible
-    }
-
-    // Show training manual if oil change was bought
+    // Oil Change
     if (data.oilChangePurchased) {
         oilChangeButton.disabled = true;
+        oilChangeButton.classList.remove("locked");
+        oilChangeButton.innerHTML = "Take the delivery vans in for an oil change ($3000)";
         deliveryCooldown /= 2;
-
-        trainingButton.disabled = false;
-        trainingButton.classList.remove("locked");
-        trainingButton.innerHTML = "Buy a Super Inflator training manual for your staff ($4000)"; // <--- Ensure it's visible
+    } else {
+        oilChangeButton.classList.add("locked");
+        oilChangeButton.disabled = true;
+        oilChangeButton.innerHTML = "???";
     }
 
-    if (bulkButtonUnlocked) {
+    // Training Manual
+    if (data.trainingManualPurchased) {
+        trainingButton.disabled = true;
+        trainingButton.classList.remove("locked");
+        trainingButton.innerHTML = "Buy a Super Inflator training manual for your staff ($4000)";
+        passiveBps = 5;
+        bpsValue.innerHTML = passiveBps;
+    } else {
+        trainingButton.classList.add("locked");
+        trainingButton.disabled = true;
+        trainingButton.innerHTML = "???";
+    }
+
+    // Bulk Sell Button
+    if (data.bulkButtonUnlocked) {
         sellButton3.disabled = false;
         sellButton3.classList.remove("locked");
         sellButton3.innerHTML = "Fulfill Balloon Order (1000 count)";
+    } else {
+        sellButton3.disabled = true;
+        sellButton3.classList.add("locked");
+        sellButton3.innerHTML = "???";
     }
 
-    // Apply training manual effect if already purchased
-    if (data.trainingManualPurchased) {
-        trainingButton.disabled = false;
-        trainingButton.classList.remove("locked");
-        trainingButton.innerHTML = "Buy a Super Inflator training manual for your staff ($4000)";
-        trainingButton.disabled = true;
-        passiveBps = 5;
-        bpsValue.innerHTML = passiveBps;
-    }
-
+    console.log("Game loaded from save");
 }
+
+
+
+
 
 function randomEventChoose() {
     const availableEvents = [activateProfitBoost, activateMarketDownturn, null]
